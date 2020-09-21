@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="assets/bootstrap.min.css">
-    <script src="assets/clipboard.min.js"></script>
     <style>
         .user-parameter {
             color: red;
             font-weight: bold;
         }
+
         @media (max-width: 768px) {
             div.flex-grow-1 {
                 overflow: auto !important;
@@ -68,23 +68,23 @@
         </select>
 
         <div class="custom-control custom-switch ml-4">
-            <input type="checkbox" class="custom-control-input" id="quote-switch">
-            <label class="custom-control-label" for="quote-switch">Auto-copy to clipboard</label>
+            <input type="checkbox" class="custom-control-input" id="auto-copy-switch">
+            <label class="custom-control-label" for="auto-copy-switch">Auto-copy to clipboard</label>
         </div>
     </form>
 
     <div class="row flex-grow-1 overflow-hidden mb-5 h-100">
         <div class="col-12 col-md-3 d-flex flex-column h-100">
-            <div id="clickable-list" class="list-group flex-grow-1 overflow-auto"></div>
+            <div id="list-of-commands" class="list-group flex-grow-1 overflow-auto"></div>
         </div>
 
         <div class="col-12 col-md-9 h-100 overflow-auto">
             <div class="m-0 border">
                 <button type="button" class="btn btn-link btn-sm position-absolute copy-to-clipboard"
-                        style="top: 1em; right: 2em" data-clipboard-target="#shell-output" title="Copy to clipboard">
+                        style="top: 1em; right: 2em" title="Copy to clipboard" onclick="copyCommandToClipboard()">
                     Copy
                 </button>
-                <pre id="shell-output" class="bg-light text-wrap text-break w-100 p-4 mb-0"
+                <pre id="command" class="bg-light text-wrap text-break w-100 p-4 mb-0"
                      style="padding-right: 5em !important; outline: 0 solid transparent;" contenteditable="true"></pre>
             </div>
         </div>
@@ -130,7 +130,7 @@
             .replace('{ip}', '<span class="user-parameter">' + ip + '</span>')
             .replace('{port}', '<span class="user-parameter">' + port + '</span>')
             .replace('{shell}', '<span class="user-parameter">' + shell + '</span>')
-        document.getElementById('shell-output').innerHTML = command
+        document.getElementById('command').innerHTML = command
     }
 
     function activateAdvanced() {
@@ -138,32 +138,37 @@
         document.getElementById('advanced-settings').style.display = 'flex'
     }
 
+
+    function copyCommandToClipboard() {
+        copyToClipboard(document.getElementById('command').innerText)
+    }
+
+    function copyToClipboard(text) {
+        if (!navigator.clipboard) return
+        navigator.clipboard.writeText(text)
+    }
+
     window.addEventListener('load', function () {
         var commandNames = Object.keys(shells).sort()
         commandNames.forEach(function (commandName) {
-            var entryElement = document.createElement('a')
-            entryElement.href = '#'
-            entryElement.innerText = commandName
-            entryElement.classList.add('list-group-item', 'list-group-item-action')
-            entryElement.onclick = function () {
+            var listEntry = document.createElement('a')
+            listEntry.href = '#'
+            listEntry.innerText = commandName
+            listEntry.classList.add('list-group-item', 'list-group-item-action')
+            listEntry.onclick = function () {
                 currentCommandName = commandName
                 update()
-                if (document.getElementById('quote-switch').checked) {
-                    document.querySelector('.copy-to-clipboard').click()
+                if (document.getElementById('auto-copy-switch').checked) {
+                    copyCommandToClipboard()
                 }
                 return false
             }
-            document.getElementById('clickable-list').appendChild(entryElement)
+            document.getElementById('clickable-list').appendChild(listEntry)
         })
 
         currentCommandName = 'Bash #1'
         update()
     })
-
-    var clipboard = new ClipboardJS('.copy-to-clipboard')
-    clipboard.on('success', (event) => {
-        event.clearSelection()
-    });
 </script>
 
 </body>
