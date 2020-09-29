@@ -1,6 +1,12 @@
 # reverse-shell-generator
 Web-based reverse shell generator
 
+<div align="center">
+    <a href="https://weibell.github.io/reverse-shell-generator/">
+        <img src="docs/screenshot.png?raw=true" alt="Screenshot"/>
+    </a>
+</div>
+
 ### See it in action: [https://weibell.github.io/reverse-shell-generator/](https://weibell.github.io/reverse-shell-generator/)
 
 
