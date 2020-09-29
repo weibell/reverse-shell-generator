@@ -1,8 +1,8 @@
 # reverse-shell-generator
 Web-based reverse shell generator
 
-<div align="center">
-    <a href="https://weibell.github.io/reverse-shell-generator/">
+<div align="center" width="400">
+    <a href="https://weibell.github.io/reverse-shell-generator/" target="_blank">
         <img src="docs/screenshot.png?raw=true" alt="Screenshot"/>
     </a>
 </div>
