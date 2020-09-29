@@ -329,7 +329,7 @@
             return text
         },
 
-        init() {
+        init: function() {
             rsg.initListenerSelection()
             rsg.initShells()
             rsg.initReverseShellSelection()
@@ -374,7 +374,7 @@
             )
         },
 
-        insertParameters(command, encoder) {
+        insertParameters: function(command, encoder) {
             return command
                 .replace(encoder('{ip}'), rsg.escapeHTML(encoder(rsg.getIP())))
                 .replace(encoder('{port}'), encoder(String(rsg.getPort())))
@@ -387,7 +387,7 @@
             rsg.updateReverseShellCommand()
         },
 
-        updateReverseShellSelection() {
+        updateReverseShellSelection: function() {
             $('.list-group-item.active').removeClass('active')
             $('.list-group-item').filter(function () {
                 return $(this).text() === rsg.currentCommandType
