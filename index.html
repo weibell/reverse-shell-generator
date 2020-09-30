@@ -459,14 +459,13 @@
      */
     $('#step2-advanced-switch').prop('checked', false)
     $('#step3-advanced-switch').prop('checked', false)
-    $('#port-privileges-warning')
 
     /*
      * Event handlers
      */
     $('#ip, #port').on('input', rsg.update)
-    $('#listener-selection').on('input', rsg.updateListenerCommand)
-    $('#shell, #encoding').on('input', rsg.updateReverseShellCommand)
+    $('#listener-selection').on('change', rsg.updateListenerCommand)
+    $('#shell, #encoding').on('change', rsg.updateReverseShellCommand)
 
     $('#inc-port').on('click', function () {
         $('#port').val(rsg.getPort() + 1)
