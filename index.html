@@ -31,6 +31,11 @@
 
         .custom-switch label {
             cursor: pointer;
+            user-select: none;
+        }
+
+        _:-ms-fullscreen, :root body { /* IE11 */
+            overflow-y: scroll;
         }
     </style>
 </head>
@@ -355,10 +360,9 @@
         initReverseShellSelection: function () {
             rsgData.reverseShellsCommands.forEach(function (reverseShellData) {
                     const type = reverseShellData[0]
-                    const entry = $('<a>', {
+                    const selectionEntry = $('<a>', {
                         href: '#',
                         text: type,
-                        'class': 'list-group-item list-group-item-action',
                         click: function (event) {
                             rsg.currentCommandType = type
                             rsg.updateReverseShellSelection()
@@ -369,7 +373,11 @@
                             event.preventDefault()
                         }
                     })
-                    $('#reverse-shell-selection').append(entry)
+                    setTimeout(function () { // fix strange IE behavior
+                        selectionEntry.addClass('list-group-item list-group-item-action')
+                    }, 0)
+
+                    $('#reverse-shell-selection').append(selectionEntry)
                 }
             )
         },
@@ -385,6 +393,21 @@
             rsg.updateListenerCommand()
             rsg.updateReverseShellSelection()
             rsg.updateReverseShellCommand()
+        },
+
+        updateListenerCommand: function () {
+            let command = $('#listener-selection').val()
+            command = rsg.highlightParameters(command)
+            command = command.replace('{port}', rsg.getPort())
+
+            if (rsg.getPort() < 1024) {
+                $('#port-privileges-warning').css('visibility', 'visible')
+                command = '<span class="highlighted-warning">sudo</span> ' + command
+            } else {
+                $('#port-privileges-warning').css('visibility', 'hidden')
+            }
+
+            $('#listener-command').html(command)
         },
 
         updateReverseShellSelection: function () {
@@ -425,19 +448,9 @@
             $('#reverse-shell-command').html(command)
         },
 
-        updateListenerCommand: function () {
-            let command = $('#listener-selection').val()
-            command = rsg.highlightParameters(command)
-            command = command.replace('{port}', rsg.getPort())
-
-            if (rsg.getPort() < 1024) {
-                $('#port-privileges-warning').css('visibility', 'visible')
-                command = '<span class="highlighted-warning">sudo</span> ' + command
-            } else {
-                $('#port-privileges-warning').css('visibility', 'hidden')
-            }
-
-            $('#listener-command').html(command)
+        updateSwitchStates: function () {
+            $('#step2-advanced').collapse($('#step2-advanced-switch').prop('checked') ? 'show' : 'hide')
+            $('#step3-advanced').collapse($('#step3-advanced-switch').prop('checked') ? 'show' : 'hide')
         }
     }
 
@@ -460,13 +473,8 @@
         rsg.update()
     })
 
-    $('#step2-advanced-switch').on('input', function () {
-        $('#step2-advanced').collapse(this.checked ? 'show' : 'hide')
-    })
-
-    $('#step3-advanced-switch').on('input', function () {
-        $('#step3-advanced').collapse(this.checked ? 'show' : 'hide')
-    })
+    $('#step2-advanced-switch, #step3-advanced-switch').on('change', rsg.updateSwitchStates)
+    setInterval(rsg.updateSwitchStates, 500) // fix switch changes in rapid succession
 
     $('#copy-listener').on('click', function () {
         rsg.copyToClipboard($('#listener-command').text())
