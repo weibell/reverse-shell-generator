@@ -363,6 +363,7 @@
                     const selectionEntry = $('<a>', {
                         href: '#',
                         text: type,
+                        'class': 'list-group-item',
                         click: function (event) {
                             rsg.currentCommandType = type
                             rsg.updateReverseShellSelection()
@@ -374,7 +375,7 @@
                         }
                     })
                     setTimeout(function () { // fix strange IE behavior
-                        selectionEntry.addClass('list-group-item list-group-item-action')
+                        selectionEntry.addClass('list-group-item-action')
                     }, 0)
 
                     $('#reverse-shell-selection').append(selectionEntry)
@@ -411,6 +412,7 @@
         },
 
         updateReverseShellSelection: function () {
+            console.log(rsg.currentCommandType)
             $('.list-group-item.active').removeClass('active')
             $('.list-group-item').filter(function () {
                 return $(this).text() === rsg.currentCommandType
